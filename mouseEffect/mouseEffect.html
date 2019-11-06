@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>鼠标特效</title>
+</head>
+<body>
+<script>
+//鼠标特效
+!(function () {
+	return;
+	function getAttribute(n, e, t) {
+		return n.getAttribute(e) || t;
+	}
+
+	function getElementsByTagName(n) {
+		return document.getElementsByTagName(n);
+	}
+
+	function getConfig() {
+		var scriptElms = getElementsByTagName("script"),
+				nowIndex = scriptElms.length,
+				nowElm = scriptElms[nowIndex - 1];
+
+		return {
+			nowIndex: nowIndex,
+			zIndex: getAttribute(nowElm, "zIndex", -1),
+			opacity: getAttribute(nowElm, "opacity", 0.5),
+			color: getAttribute(nowElm, "color", "0,0,0"),
+			count: getAttribute(nowElm, "count", 99)
+		};
+	}
+
+	function canvasOutlineUpdate() {
+		(winwidth = canvas.width =
+				window.innerWidth ||
+				document.documentElement.clientWidth ||
+				document.body.clientWidth),
+				(winheight = canvas.height =
+						window.innerHeight ||
+						document.documentElement.clientHeight ||
+						document.body.clientHeight);
+	}
+
+	function updateFrame() {
+		canvasContext.clearRect(0, 0, winwidth, winheight);
+
+		var nextPoint, nextIndex, t, lengthX, lengthY, 平方和;
+
+		randomPoints.forEach(function (i, x) {
+			for (
+					i.x += i.xa,
+							i.y += i.ya,
+							i.xa *= i.x > winwidth || i.x < 0 ? -1 : 1,
+							i.ya *= i.y > winheight || i.y < 0 ? -1 : 1,
+							canvasContext.fillRect(i.x - 0.5, i.y - 0.5, 1, 1),
+							nextIndex = x + 1; nextIndex < allPoints.length; nextIndex++
+			)
+				(nextPoint = allPoints[nextIndex]),
+				null !== nextPoint.x &&
+				null !== nextPoint.y &&
+				((lengthX = i.x - nextPoint.x),
+						(lengthY = i.y - nextPoint.y),
+						(平方和 = lengthX * lengthX + lengthY * lengthY),
+				平方和 < nextPoint.max &&
+				(nextPoint === currentPoint &&
+				平方和 >= nextPoint.max / 2 &&
+				((i.x -= 0.03 * lengthX), (i.y -= 0.03 * lengthY)),
+						(t = (nextPoint.max - 平方和) / nextPoint.max),
+						canvasContext.beginPath(),
+						(canvasContext.lineWidth = t / 2),
+						(canvasContext.strokeStyle = "rgba(" + config.color + "," + (t + 0.2) + ")"),
+						canvasContext.moveTo(i.x, i.y),
+						canvasContext.lineTo(nextPoint.x, nextPoint.y),
+						canvasContext.stroke()));
+		}),
+				animationTimer(updateFrame);
+	}
+
+	var winwidth,
+			winheight,
+			allPoints,
+			canvas = document.createElement("canvas"),
+			config = getConfig(),
+			canvasId = "c_n" + config.nowIndex,
+			canvasContext = canvas.getContext("2d"),
+			animationTimer =
+					window.requestAnimationFrame ||
+					window.webkitRequestAnimationFrame ||
+					window.mozRequestAnimationFrame ||
+					window.oRequestAnimationFrame ||
+					window.msRequestAnimationFrame ||
+					function (n) {
+						window.setTimeout(n, 1e3 / 45);
+					},
+			randomFun = Math.random,
+			currentPoint = {
+				x: null,
+				y: null,
+				max: 2e4
+			};
+	(canvas.id = canvasId),
+			(canvas.style.cssText =
+					"position:fixed;top:0;left:0;z-index:" + config.zIndex + ";opacity:" + config.opacity),
+			getElementsByTagName("body")[0].appendChild(canvas),
+			canvasOutlineUpdate(),
+			(window.onresize = canvasOutlineUpdate),
+			(window.onmousemove = function (n) {
+				(n = n || window.event), (currentPoint.x = n.clientX), (currentPoint.y = n.clientY);
+			}),
+			(window.onmouseout = function () {
+				(currentPoint.x = null), (currentPoint.y = null);
+			});
+
+	for (var randomPoints = [], f = 0; config.count > f; f++) {
+		var x = randomFun() * winwidth,
+				y = randomFun() * winheight,
+				offsetX = 2 * randomFun() - 1,
+				offsetY = 2 * randomFun() - 1;
+		randomPoints.push({
+			x: x,
+			y: y,
+			xa: offsetX,
+			ya: offsetY,
+			max: 6e3
+		});
+	}
+
+	(allPoints = randomPoints.concat([currentPoint])),
+			setTimeout(function () {
+				updateFrame();
+			}, 100);
+})();
+</script>
+</body>
+
+</html>
